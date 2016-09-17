@@ -1,6 +1,7 @@
-package org.terkwood.pathfinding
+package org.terkwood.pathfinding.core
 
-package object core {
+package object models {
+  type Path = IndexedSeq[Point]
 
   /**
     * Determine whether the position is inside the grid.
@@ -29,4 +30,7 @@ package object core {
       }
   }
 
+  implicit class nodeToPoint(from: Node) {
+    def toPoint: Point = Point(from.x, from.y)
+  }
 }

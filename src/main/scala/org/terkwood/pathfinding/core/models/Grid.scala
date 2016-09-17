@@ -1,73 +1,15 @@
-package org.terkwood.pathfinding.core
+package org.terkwood.pathfinding.core.models
 
-import org.terkwood.pathfinding.core.DiagonalMovement.DiagonalMovementOption
+import org.terkwood.pathfinding.core.models.DiagonalMovement.DiagonalMovementOption
 
 import scala.collection.mutable.ListBuffer
 import scala.util.Try
 
-object Grid {
-
-  /**
-    * The Grid class, which serves as the encapsulation
-    * of the layout of the nodes.
-    *
-    * @param width  Number of columns in the grid
-    * @param height Number of rows in the grid
-    * @param matrix A boolean matrix representing the walkable
-    *               status of the nodes (false for walkable).
-    *               If the matrix is not supplied, all the nodes
-    *               will be walkable.
-    * @return
-    */
-  def apply(width: Int, height: Int, matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = IndexedSeq.empty): Grid = {
-    val (w, h, m) = (width, height, matrix)
-    new Grid {
-      override val matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = m
-      override val height: Int = h
-      override val width: Int = w
-
-      assert(width > 0 || height > 0,
-        "Please use positive values for width & height")
-    }
-  }
-
-  /**
-    * The Grid class, which serves as the encapsulation of the layout of the nodes.
-    *
-    * @param matrix A boolean matrix representing the walkable
-    *               status of the nodes (false for walkable).
-    *               If the matrix is not supplied, all the nodes
-    *               will be walkable.
-    * @return
-    */
-  def apply(matrix: IndexedSeq[IndexedSeq[WalkableStatus]]): Grid = {
-    val m = matrix
-    new Grid {
-      override val matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = m
-      override val height: Int = matrix.length
-      override val width: Int = matrix.head.length
-
-      assert(matrix.nonEmpty && matrix.head.nonEmpty,
-        "Please supply a matrix which has data in both dimensions")
-
-    }
-  }
-
-  /** Used by [withWalkableAt] and [clone] */
-  protected def apply(nodes: IndexedSeq[IndexedSeq[Node]], width: Int, height: Int): Grid = {
-    val origWidth = width
-    val origHeight = height
-    val newNodes = nodes
-    new Grid {
-      override val width: Int = origWidth
-      /** won't be used, at this point */
-      override val matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = IndexedSeq()
-      override val height: Int = origHeight
-      override lazy val nodes = newNodes
-    }
-  }
-}
-
+/** A 2-dimensional coordinate grid containing
+  * nodes which are either walkable, or not walkable.
+  *
+  * Serves as encapsulation for the layout of nodes.
+  **/
 trait Grid {
   /** The number of columns of the grid. */
   val width: Int
@@ -171,7 +113,6 @@ trait Grid {
       case DiagonalMovement.Never =>
         neighbors.toIndexedSeq
 
-
       case _ =>
         val (d0, d1, d2, d3) = diagonalMovement match {
           case DiagonalMovement.OnlyWhenNoObstacles =>
@@ -188,6 +129,8 @@ trait Grid {
 
           case DiagonalMovement.Always =>
             (true, true, true, true)
+
+          case _ => throw new Exception("not reachable")
         }
 
         // ↖
@@ -248,4 +191,68 @@ trait Grid {
         })
   }
 
+}
+
+
+object Grid {
+
+  /**
+    * The Grid class, which serves as the encapsulation
+    * of the layout of the nodes.
+    *
+    * @param width  Number of columns in the grid
+    * @param height Number of rows in the grid
+    * @param matrix A boolean matrix representing the walkable
+    *               status of the nodes (false for walkable).
+    *               If the matrix is not supplied, all the nodes
+    *               will be walkable.
+    * @return
+    */
+  def apply(width: Int, height: Int, matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = IndexedSeq.empty): Grid = {
+    val (w, h, m) = (width, height, matrix)
+    new Grid {
+      override val matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = m
+      override val height: Int = h
+      override val width: Int = w
+
+      assert(width > 0 || height > 0,
+        "Please use positive values for width & height")
+    }
+  }
+
+  /**
+    * The Grid class, which serves as the encapsulation of the layout of the nodes.
+    *
+    * @param matrix A boolean matrix representing the walkable
+    *               status of the nodes (false for walkable).
+    *               If the matrix is not supplied, all the nodes
+    *               will be walkable.
+    * @return
+    */
+  def apply(matrix: IndexedSeq[IndexedSeq[WalkableStatus]]): Grid = {
+    val m = matrix
+    new Grid {
+      override val matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = m
+      override val height: Int = matrix.length
+      override val width: Int = matrix.head.length
+
+      assert(matrix.nonEmpty && matrix.head.nonEmpty,
+        "Please supply a matrix which has data in both dimensions")
+
+    }
+  }
+
+  /** Used by [withWalkableAt] and [clone] */
+  protected def apply(nodes: IndexedSeq[IndexedSeq[Node]], width: Int, height: Int): Grid = {
+    val origWidth = width
+    val origHeight = height
+    val newNodes = nodes
+    new Grid {
+      override val width: Int = origWidth
+      /** won't be used, at this point */
+      override val matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = IndexedSeq()
+      override val height: Int = origHeight
+      override lazy val nodes = newNodes
+    }
+  }
 }

@@ -1,4 +1,4 @@
-package org.terkwood.pathfinding.core
+package org.terkwood.pathfinding.core.models
 
 object DiagonalMovement {
 
