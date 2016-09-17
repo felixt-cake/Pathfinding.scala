@@ -24,24 +24,23 @@ class GridSpec extends FlatSpec with MustMatchers {
       for {
         i <- 0 until height
         j <- 0 until width
-      } grid isWalkableAt(j, i) mustBe true
+      } grid isWalkableAt(j, i) mustBe false
     }
   }
 
   {
-    val matrix: IndexedSeq[IndexedSeq[Boolean]] = IndexedSeq(
-      IndexedSeq(true, false, false, true),
-      IndexedSeq(false, true, false, false),
-      IndexedSeq(false, true, false, false),
-      IndexedSeq(false, false, false, false),
-      IndexedSeq(true, false, false, true)
+    val matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = IndexedSeq(
+      IndexedSeq(NoWalk, Walk, Walk, NoWalk),
+      IndexedSeq(Walk, NoWalk, Walk, Walk),
+      IndexedSeq(Walk, NoWalk, Walk, Walk),
+      IndexedSeq(Walk, Walk, Walk, Walk),
+      IndexedSeq(NoWalk, Walk, Walk, NoWalk)
     )
 
     val width: Int = matrix.head.length
     val height: Int = matrix.length
 
     val grid = Grid(width, height, matrix)
-
 
     def enumPos2[A](f: (Int, Int) => A) =
       for {y <- 0 until height
@@ -54,12 +53,6 @@ class GridSpec extends FlatSpec with MustMatchers {
            x <- 0 until width}
         yield
           f(x, y, grid)
-
-    def enumPos4[A, B](f: (B, Int, Int, Grid) => A, b: B) =
-      for {y <- 0 until height
-           x <- 0 until width}
-        yield
-          f(b, x, y, grid)
 
     "A grid, created with a matrix" must "have correct size" in {
       grid.width mustEqual width
@@ -74,32 +67,48 @@ class GridSpec extends FlatSpec with MustMatchers {
 
     it must "correctly default all nodes' walkable attributes" in {
       enumPos3((x, y, g) => {
-        if (matrix(y)(x)) {
-          g isWalkableAt(x, y) mustBe false
-        } else {
-          g isWalkableAt(x, y) mustBe true
+        matrix(y)(x) match {
+          case NoWalk => g isWalkableAt(x, y) mustBe false
+          case Walk => g isWalkableAt(x, y) mustBe true
         }
       })
     }
 
-    it must "set all nodes' walkable attributes" in {
+
+    it must "update all nodes' walkable attributes" in {
       var result = grid
-
       enumPos2 { (x, y) =>
-        result = grid withWalkableAt(x, y, walkable = false)
+        result = result.withWalkableAt(x, y, walkable = false)
       }
 
       enumPos2 { (x, y) =>
-        result isWalkableAt(x, y) mustBe false
+        withClue(s"#0: isWalkable($x,$y) failed") {
+          result isWalkableAt(x, y) mustBe false
+        }
       }
 
       enumPos2 { (x, y) =>
-        result = result withWalkableAt(x, y, walkable = true)
+        result = result.withWalkableAt(x, y, walkable = true)
       }
 
       enumPos2 { (x, y) =>
-        result isWalkableAt(x, y) mustBe true
+        withClue(s"#1: isWalkable($x,$y) failed") {
+          result isWalkableAt(x, y) mustBe true
+        }
       }
+    }
+
+
+    it must "return the node at the coordinate requested" in {
+      grid.nodeAt(0,0).get mustEqual Node(0,0,walkable = false)
+    }
+    it must "return a Failure if the given coordinate is outside the grid's x boundary" in {
+      val attempt = grid.nodeAt(width + 5, 0)
+      attempt.isFailure mustBe true
+    }
+    it must "return a Failure if the given coordinate is outside the grid's y boundary" in {
+      val attempt = grid.nodeAt(0, height + 5)
+      attempt.isFailure mustBe true
     }
 
 
@@ -118,7 +127,7 @@ class GridSpec extends FlatSpec with MustMatchers {
       )
 
       asserts foreach { case (p, q, z) =>
-        grid.isInside(p, q) mustEqual z
+        ((p, q) isInside grid) mustEqual z
       }
     }
 
@@ -137,12 +146,12 @@ class GridSpec extends FlatSpec with MustMatchers {
   }
 
   {
-    val matrix = IndexedSeq(
-      IndexedSeq(true, false, false, true),
-      IndexedSeq(false, true, false, false),
-      IndexedSeq(false, true, false, false),
-      IndexedSeq(false, false, false, false),
-      IndexedSeq(true, false, false, true))
+    val matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = Seq(
+      Seq(true, false, false, true),
+      Seq(false, true, false, false),
+      Seq(false, true, false, false),
+      Seq(false, false, false, false),
+      Seq(true, false, false, true)).toWalkableStatusMatrix
 
     val grid = Grid(matrix)
 

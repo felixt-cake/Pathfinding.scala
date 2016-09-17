@@ -2,9 +2,9 @@ package org.terkwood.pathfinding.core
 
 import org.terkwood.pathfinding.core.DiagonalMovement.DiagonalMovementOption
 
+import scala.util.Try
+
 object Grid {
-  val Walkable = false
-  val NotWalkable = true
 
   /**
     * The Grid class, which serves as the encapsulation
@@ -18,10 +18,10 @@ object Grid {
     *               will be walkable.
     * @return
     */
-  def apply(width: Int, height: Int, matrix: IndexedSeq[IndexedSeq[Boolean]] = IndexedSeq.empty) = {
+  def apply(width: Int, height: Int, matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = IndexedSeq.empty): Grid = {
     val (w, h, m) = (width, height, matrix)
     new Grid {
-      override val matrix: IndexedSeq[IndexedSeq[Boolean]] = m
+      override val matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = m
       override val height: Int = h
       override val width: Int = w
 
@@ -39,15 +39,16 @@ object Grid {
     *               will be walkable.
     * @return
     */
-  def apply(matrix: IndexedSeq[IndexedSeq[Boolean]]) = {
+  def apply(matrix: IndexedSeq[IndexedSeq[WalkableStatus]]): Grid = {
     val m = matrix
     new Grid {
-      override val matrix: IndexedSeq[IndexedSeq[Boolean]] = m
+      override val matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = m
       override val height: Int = matrix.length
       override val width: Int = matrix.head.length
 
       assert(matrix.nonEmpty && matrix.head.nonEmpty,
         "Please supply a matrix which has data in both dimensions")
+
     }
   }
 }
@@ -60,18 +61,63 @@ trait Grid {
 
   /** A boolean matrix representing the walkable
     * status of the nodes (false for walkable). */
-  val matrix: IndexedSeq[IndexedSeq[Boolean]]
+  protected val matrix: IndexedSeq[IndexedSeq[WalkableStatus]]
 
   lazy val nodes: IndexedSeq[IndexedSeq[Node]] =
     buildNodes(width, height, matrix)
 
-  def getNodeAt(x: Int, y: Int): Node = nodes(y)(x)
+  /**
+    * Get the node at the given coordinates.
+    * Will hold an exception if given a coordinate out of bounds.
+    *
+    * @param x x coordinate: column
+    * @param y y coordinate: row
+    * @return
+    */
+  def nodeAt(x: Int, y: Int): Try[Node] = Try {
+    nodes(y)(x)
+  }
 
-  def isWalkableAt(x: Int, y: Int): Boolean = ???
+  /**
+    * Determine whether the node at the given position is walkable.
+    * (Also returns false if the position is outside the grid.)
+    *
+    * @param x - x coordinate of the node
+    * @param y - y coordinate of the node
+    * @return - Whether this node can be walked through
+    */
+  def isWalkableAt(x: Int, y: Int): Boolean =
+    ((x, y) isInside this) && this.nodes(y)(x).walkable
 
-  def isInside(x: Int, y: Int): Boolean = ???
+  /**
+    * Return a copy of the grid, with the node on the given position
+    * updated with a new value for 'walkable'
+    *
+    * NOTE: does nothing if the coordinate is not inside the grid.
+    *
+    * @param x        - x coordinate of the node
+    * @param y        - y coordinate of the node
+    * @param walkable - can this node be walked on?
+    * @return void
+    */
+  def withWalkableAt(x: Int, y: Int, walkable: Boolean): Grid = {
+    val newNodes = for {i <- 0 until height} yield
+      for {j <- 0 until width} yield
+        if (x == j && y == i)
+          Node(x, y, walkable)
+        else this.nodeAt(j, i).get
 
-  def withWalkableAt(x: Int, y: Int, walkable: Boolean): Grid = ???
+    val origWidth = width
+    val origHeight = height
+    new Grid {
+      override val width: Int = origWidth
+      /** won't be used, at this point */
+      override val matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = IndexedSeq()
+      override val height: Int = origHeight
+      override lazy val nodes = newNodes
+    }
+  }
+
 
   /**
     * Get the neighbors of the given node.
@@ -95,15 +141,42 @@ trait Grid {
     */
   def getNeighbors(node: Node, diagonalMovement: DiagonalMovementOption): Seq[Node] = ???
 
-  /**
-    * Get a clone of this grid.
+  /** Create a copy of the grid, potentially
+    * with altering a given node.
     *
-    * @return cloned grid
+    * @return
     */
-  override def clone: Grid = ???
+  override def clone(): Grid = Grid(width, height, matrix)
 
-  private def buildNodes(w: Int,
-                         h: Int,
-                         m: IndexedSeq[IndexedSeq[Boolean]]): IndexedSeq[IndexedSeq[Node]] =
-    ???
+  /**
+    * Build and return the nodes.
+    *
+    * @param width  width
+    * @param height height
+    * @param matrix A Boolean matrix representing
+    *               the walkable status of the nodes.
+    * @return
+    */
+  private def buildNodes(width: Int,
+                         height: Int,
+                         matrix: IndexedSeq[IndexedSeq[WalkableStatus]]): IndexedSeq[IndexedSeq[Node]] = {
+
+    if (matrix.nonEmpty)
+      assert(matrix.length == height && matrix.head.length == width,
+        "Matrix size does not fit")
+
+    for {
+      i <- 0 until height
+    } yield for {
+      j <- 0 until width
+    } yield
+      Node(j, i, walkable =
+        if (matrix.isEmpty)
+          false
+        else matrix(i)(j) match {
+          case Walk => true
+          case NoWalk => false
+        })
+  }
+
 }
