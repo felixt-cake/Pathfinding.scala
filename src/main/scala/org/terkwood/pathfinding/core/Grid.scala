@@ -2,6 +2,7 @@ package org.terkwood.pathfinding.core
 
 import org.terkwood.pathfinding.core.DiagonalMovement.DiagonalMovementOption
 
+import scala.collection.mutable.ListBuffer
 import scala.util.Try
 
 object Grid {
@@ -49,6 +50,20 @@ object Grid {
       assert(matrix.nonEmpty && matrix.head.nonEmpty,
         "Please supply a matrix which has data in both dimensions")
 
+    }
+  }
+
+  /** Used by [withWalkableAt] and [clone] */
+  protected def apply(nodes: IndexedSeq[IndexedSeq[Node]], width: Int, height: Int): Grid = {
+    val origWidth = width
+    val origHeight = height
+    val newNodes = nodes
+    new Grid {
+      override val width: Int = origWidth
+      /** won't be used, at this point */
+      override val matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = IndexedSeq()
+      override val height: Int = origHeight
+      override lazy val nodes = newNodes
     }
   }
 }
@@ -107,15 +122,7 @@ trait Grid {
           Node(x, y, walkable)
         else this.nodeAt(j, i).get
 
-    val origWidth = width
-    val origHeight = height
-    new Grid {
-      override val width: Int = origWidth
-      /** won't be used, at this point */
-      override val matrix: IndexedSeq[IndexedSeq[WalkableStatus]] = IndexedSeq()
-      override val height: Int = origHeight
-      override lazy val nodes = newNodes
-    }
+    Grid(newNodes, width, height)
   }
 
 
@@ -139,14 +146,76 @@ trait Grid {
     * @param diagonalMovement diagonalMovement type
     * @return
     */
-  def getNeighbors(node: Node, diagonalMovement: DiagonalMovementOption): Seq[Node] = ???
+  def getNeighbors(node: Node, diagonalMovement: DiagonalMovementOption): IndexedSeq[Node] = {
+    val x = node.x
+    val y = node.y
+    val neighbors = ListBuffer.empty[Node]
+
+    // ↑
+    val s0 = this.isWalkableAt(x, y - 1)
+    if (s0) neighbors += nodes(y - 1)(x)
+
+    // →
+    val s1 = this.isWalkableAt(x + 1, y)
+    if (s1) neighbors += nodes(y)(x + 1)
+
+    // ↓
+    val s2 = this.isWalkableAt(x, y + 1)
+    if (s2) neighbors += nodes(y + 1)(x)
+
+    // ←
+    val s3 = this.isWalkableAt(x - 1, y)
+    if (s3) neighbors += nodes(y)(x - 1)
+
+    diagonalMovement match {
+      case DiagonalMovement.Never =>
+        neighbors.toIndexedSeq
+
+
+      case _ =>
+        val (d0, d1, d2, d3) = diagonalMovement match {
+          case DiagonalMovement.OnlyWhenNoObstacles =>
+            (s3 && s0,
+              s0 && s1,
+              s1 && s2,
+              s2 && s3)
+
+          case DiagonalMovement.IfAtMostOneObstacle =>
+            (s3 || s0,
+              s0 || s1,
+              s1 || s2,
+              s2 || s3)
+
+          case DiagonalMovement.Always =>
+            (true, true, true, true)
+        }
+
+        // ↖
+        if (d0 && this.isWalkableAt(x - 1, y - 1))
+          neighbors += nodes(y - 1)(x - 1)
+
+        // ↗
+        if (d1 && this.isWalkableAt(x + 1, y - 1))
+          neighbors += nodes(y - 1)(x + 1)
+
+        // ↘
+        if (d2 && this.isWalkableAt(x + 1, y + 1))
+          neighbors += nodes(y + 1)(x + 1)
+
+        // ↙
+        if (d3 && this.isWalkableAt(x - 1, y + 1))
+          neighbors += nodes(y + 1)(x - 1)
+
+        neighbors.toIndexedSeq
+    }
+  }
 
   /** Create a copy of the grid, potentially
     * with altering a given node.
     *
     * @return
     */
-  override def clone(): Grid = Grid(width, height, matrix)
+  override def clone(): Grid = Grid(nodes, width, height)
 
   /**
     * Build and return the nodes.

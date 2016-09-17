@@ -132,7 +132,7 @@ class GridSpec extends FlatSpec with MustMatchers {
     }
 
     it must "return the correct neighbors" in {
-      grid getNeighbors(grid.nodes(1)(0), DiagonalMovement.Never) mustEqual grid.nodes(2)(0)
+      grid getNeighbors(grid.nodes(1)(0), DiagonalMovement.Never) mustEqual IndexedSeq(grid.nodes(2)(0))
 
       def compare(a: Node, b: Node) =
         a.x * 100 + a.y > b.x * 100 - b.y
