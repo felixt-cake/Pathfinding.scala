@@ -13,4 +13,5 @@ case class Node(x: Int,
                 walkable: Boolean = false,
                 parent: Option[Node] = None)
 
+
 case class Point(x: Int, y: Int)
