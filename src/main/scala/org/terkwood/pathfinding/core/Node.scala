@@ -1,5 +1,6 @@
 package org.terkwood.pathfinding.core
 
-class Node {
-
+trait Node {
+  val x: Int
+  val y: Int
 }

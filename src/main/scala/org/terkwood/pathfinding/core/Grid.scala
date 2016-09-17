@@ -1,5 +1,7 @@
 package org.terkwood.pathfinding.core
 
+import org.terkwood.pathfinding.core.DiagonalMovement.DiagonalMovementOption
+
 object Grid {
   val Walkable = false
   val NotWalkable = true
@@ -10,12 +12,16 @@ object Grid {
     *
     * @param width  Number of columns in the grid
     * @param height Number of rows in the grid
+    * @param matrix A boolean matrix representing the walkable
+    *               status of the nodes (false for walkable).
+    *               If the matrix is not supplied, all the nodes
+    *               will be walkable.
     * @return
     */
-  def apply(width: Int, height: Int) = {
-    val (w, h) = (width, height)
+  def apply(width: Int, height: Int, matrix: IndexedSeq[IndexedSeq[Boolean]] = IndexedSeq.empty) = {
+    val (w, h, m) = (width, height, matrix)
     new Grid {
-      override val matrix: IndexedSeq[IndexedSeq[Boolean]] = IndexedSeq.empty
+      override val matrix: IndexedSeq[IndexedSeq[Boolean]] = m
       override val height: Int = h
       override val width: Int = w
 
@@ -65,7 +71,7 @@ trait Grid {
 
   def isInside(x: Int, y: Int): Boolean = ???
 
-  def withWalkableAt(x: Int, y: Int): Grid = ???
+  def withWalkableAt(x: Int, y: Int, walkable: Boolean): Grid = ???
 
   /**
     * Get the neighbors of the given node.
@@ -87,7 +93,7 @@ trait Grid {
     * @param diagonalMovement diagonalMovement type
     * @return
     */
-  def getNeighbors(node: Node, diagonalMovement: DiagonalMovement): Seq[Node] = ???
+  def getNeighbors(node: Node, diagonalMovement: DiagonalMovementOption): Seq[Node] = ???
 
   /**
     * Get a clone of this grid.
