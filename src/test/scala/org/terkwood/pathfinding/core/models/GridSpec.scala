@@ -151,7 +151,7 @@ class GridSpec extends FlatSpec with MustMatchers {
       Seq(false, true, false, false),
       Seq(false, true, false, false),
       Seq(false, false, false, false),
-      Seq(true, false, false, true)).toWalkableStatusMatrix
+      Seq(true, false, false, true)).toWalkable
 
     val grid = Grid(matrix)
 

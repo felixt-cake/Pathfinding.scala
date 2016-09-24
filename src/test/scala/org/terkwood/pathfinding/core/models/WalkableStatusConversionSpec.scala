@@ -20,7 +20,7 @@ class WalkableStatusConversionSpec extends FlatSpec with MustMatchers {
       Seq(true, false, false, true)
     )
 
-    matrix.toWalkableStatusMatrix mustEqual Expected
+    matrix.toWalkable mustEqual Expected
   }
 
   it must "allow conversion of Seq[Seq[Boolean]] to IndexedSeq[IndexedSeq[WalkableStatus]]" in {
@@ -32,7 +32,7 @@ class WalkableStatusConversionSpec extends FlatSpec with MustMatchers {
       Seq(true, false, false, true)
     )
 
-     matrix.toWalkableStatusMatrix mustEqual Expected
+     matrix.toWalkable mustEqual Expected
   }
 
 }

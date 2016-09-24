@@ -4,6 +4,10 @@ import org.scalatest.{FlatSpec, MustMatchers}
 import org.terkwood.pathfinding.core.models.Point
 
 class UtilitySpec extends FlatSpec with MustMatchers {
+  "backtrace" must "return the path based on nodes' parents" ignore {
+    ???
+  }
+
   "interpolate" must "return the interpolated path" in {
     interpolate(0, 1, 0, 4) mustEqual
       IndexedSeq(

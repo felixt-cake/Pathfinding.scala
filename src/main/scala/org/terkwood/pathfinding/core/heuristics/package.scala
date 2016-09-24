@@ -2,6 +2,8 @@ package org.terkwood.pathfinding.core
 
 /** A collection of heuristic functions */
 package object heuristics {
+  type Heuristic = (Double, Double) => Double
+
   /**
     * Manhattan distance.
     *

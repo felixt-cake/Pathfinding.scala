@@ -13,7 +13,7 @@ package object models {
   }
 
   implicit class intMatrixToWalkableStatus(from: Seq[Seq[Int]]) {
-    def toWalkableStatusMatrix: IndexedSeq[IndexedSeq[WalkableStatus]] =
+    def toWalkable: IndexedSeq[IndexedSeq[WalkableStatus]] =
       from.toIndexedSeq.map {
         _.toIndexedSeq.map {
           WalkableStatus.from
@@ -22,7 +22,7 @@ package object models {
   }
 
   implicit class booleanMatrixToWalkableStatus(from: Seq[Seq[Boolean]]) {
-    def toWalkableStatusMatrix: IndexedSeq[IndexedSeq[WalkableStatus]] =
+    def toWalkable: IndexedSeq[IndexedSeq[WalkableStatus]] =
       from.toIndexedSeq.map {
         _.toIndexedSeq.map {
           WalkableStatus.from

@@ -12,11 +12,11 @@ case object Walk extends WalkableStatus
 case object NoWalk extends WalkableStatus
 
 object WalkableStatus {
-  def from(a: Int) = a match {
+  def from(a: Int): WalkableStatus with Product with Serializable = a match {
     case 0 => Walk
     case _ => NoWalk
   }
-  def from(a: Boolean) = a match {
+  def from(a: Boolean): WalkableStatus with Product with Serializable = a match {
     case false => Walk
     case _ => NoWalk
   }
